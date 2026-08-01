@@ -2,7 +2,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from sentence_transformers import CrossEncoder
 import os
 
-os.environ["HF_TOKEN"] = "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"
+hf_token = os.getenv("HF_TOKEN")
 
 # Loads and returns the embedding model used to convert chunks into vector embeddings
 def huggingface_model():
