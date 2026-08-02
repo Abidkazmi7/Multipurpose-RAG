@@ -65,6 +65,6 @@ def final_prompt(question):
 
     return answer
 
-question = "What are the 7th and 8th semester courses of BS AI?"
+question = "What do the students have to say about the Bachelors in Chemical Engineering program?"
 answer = final_prompt(question)
 print(f"ANSWER: {answer}")

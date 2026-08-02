@@ -12,7 +12,7 @@ def parse_queries(x: str):
 
 # Create multiple queries for expanded context
 def create_multi_query(llm):
-    template = """You are an AI language model assistant. Your task is to generate five 
+    template = """You are an AI language model assistant. Your task is to generate three 
     alternative versions that preserve the exact intent of the given user question to retrieve relevant documents from a vector 
     database. By generating multiple perspectives on the user question, your goal is to help
     the user overcome some of the limitations of the distance-based similarity search. 

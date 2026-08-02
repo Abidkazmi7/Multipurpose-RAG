@@ -5,6 +5,8 @@ from processing.youtube_chunker import yt_semantic_chunk
 from vectorstore.chroma_db import vector_database
 from embeddings.models import huggingface_model
 from retrieval.multi_query import create_multi_query, get_unique_union
+from retrieval.bm25 import bm25_retriever
+from retrieval.ensemble_retriever import ensemble_retriever
 from models.groq import query_llm
 
 def build_retriever(chunks):
@@ -14,7 +16,15 @@ def build_retriever(chunks):
     vector_db = vector_database(chunks, model)
 
     # Obtain top k relevant chunks
-    retrieved_chunks = vector_db.as_retriever()
+    vector_retriever = vector_db.as_retriever()
+
+    # Create BM25 retriever
+    bm25 = bm25_retriever(chunks)
+
+    retrieved_chunks = ensemble_retriever(
+        bm25,
+        vector_retriever
+    )
 
     return retrieved_chunks
 

@@ -1,6 +1,9 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 from sentence_transformers import CrossEncoder
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 hf_token = os.getenv("HF_TOKEN")
 
