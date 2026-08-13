@@ -10,7 +10,7 @@ from retrieval.reranker import rerank
 from dotenv import load_dotenv
 load_dotenv()
 
-pdf_path = "E:\Artificial Intelligence\RAG\Multi-purpose RAG System\data\Prospectus.pdf"
+pdf_path = "data\Prospectus.pdf"
 # url = "https://www.youtube.com/watch?v=FLcrvMfHUJM"
 
 def rerank_docs(inputs):
