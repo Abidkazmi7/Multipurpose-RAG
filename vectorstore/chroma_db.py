@@ -1,7 +1,11 @@
 from langchain_community.vectorstores import Chroma
 
 # Chroma vectorspace
-def vector_database(chunks, model):
+def chroma_retriever(chunks, model):
+    # Create vectorstore
     vectorstore = Chroma.from_documents(documents = chunks, embedding = model)
 
-    return vectorstore
+    # Create retriever object
+    retriever = vectorstore.as_retriever()
+
+    return retriever
