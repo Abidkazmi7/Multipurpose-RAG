@@ -8,14 +8,14 @@ api_key = os.getenv("GROQ_API_KEY")
 
 # LLM model for multi query generation
 query_llm = ChatGroq(
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-20b",
     temperature=0,
     api_key = api_key
 )
 
 # LLM model for final answers
 answer_llm = ChatGroq(
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-20b",
     temperature=0.3,
     api_key = api_key
 )

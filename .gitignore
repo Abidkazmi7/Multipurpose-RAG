@@ -1,17 +1,17 @@
-# Virtual Environment
+# Virtual environment
 .venv/
 venv/
-ENV/
 
-# Secrets
-.env
-
-# Python bytecode / caches
+# Python cache
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 
-# Large data files
-data/
+# PDF files
 *.pdf
+
+# Chroma DB files
+*.sqlite3
+*.bin
+
+# Environment files
+*.env
