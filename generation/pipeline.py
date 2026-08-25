@@ -3,6 +3,7 @@ from ingestion.youtube_loader import load_youtube
 from processing.pdf_chunker import text_chunker
 from processing.youtube_chunker import yt_semantic_chunk
 from vectorstore.chroma_db import chroma_retriever
+from vectorstore.parent_store import build_parent_store
 from embeddings.models import huggingface_model
 from retrieval.multi_query import create_multi_query, get_unique_union
 from retrieval.bm25 import bm25_retriever
@@ -16,11 +17,11 @@ def build_retriever(chunks):
     semantic_retriever = chroma_retriever(chunks, model)
 
     # Create BM25 retriever
-    bm25_retriever = bm25_retriever(chunks)
+    keyword_retriever = bm25_retriever(chunks)
 
     # Build retriever object
     retriever = ensemble_retriever(
-        bm25_retriever,
+        keyword_retriever,
         semantic_retriever
     )
 
@@ -29,10 +30,17 @@ def build_retriever(chunks):
 # Document retrieval object
 def doc_retriever(pdf_path):
     docs = load_pdf(pdf_path)
-    chunks = text_chunker(docs)
-    retriever = build_retriever(chunks)
 
-    return retriever
+    # Parent-child chunking
+    parent_chunks, child_chunks = text_chunker(docs)
+
+    # Store parents for later lookup
+    parent_store = build_parent_store(parent_chunks)
+
+    # Retrievers search child chunks
+    retriever = build_retriever(child_chunks)
+
+    return retriever, parent_store
 
 # Youtube video retriever object
 def youtube_retriever(url):

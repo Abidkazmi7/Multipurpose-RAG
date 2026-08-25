@@ -4,7 +4,8 @@ from langchain_core.runnables import RunnableLambda
 from generation.pipeline import retrieval_chain, youtube_retriever, doc_retriever
 from operator import itemgetter
 from models.groq import answer_llm
-from retrieval.reranker import rerank
+from retrieval.reranker import rerank_docs
+from retrieval.fetch_parent_docs import get_parents
 
 # Link Langsmith
 from dotenv import load_dotenv
@@ -12,12 +13,6 @@ load_dotenv()
 
 pdf_path = "E:\Artificial Intelligence\RAG\Multi-purpose RAG System\data\Prospectus.pdf"
 # url = "https://www.youtube.com/watch?v=FLcrvMfHUJM"
-
-def rerank_docs(inputs):
-    return rerank(
-        query = inputs["question"],
-        docs = inputs["docs"]
-    )
 
 # Final prompt fed to LLM
 def final_prompt(question):
@@ -38,18 +33,22 @@ def final_prompt(question):
         Question: {question}
     """
 
+    # Get retriever object & parent document store
+    retriever, parent_store = doc_retriever(pdf_path)
+
     # Retrieve unique docs
-    chain = retrieval_chain(doc_retriever(pdf_path))
+    chain = retrieval_chain(retriever)
 
     prompt = PromptTemplate.from_template(doc_template)
 
-    # Rerank retrieved docs
+    # Rerank retrieved docs & fetch their corresponding parent document
     reranked_retrieval = (
         {
             "docs" : chain,
             "question" : itemgetter("question")
         }
         | RunnableLambda(rerank_docs)
+        | RunnableLambda(lambda docs: get_parents(docs, parent_store))
     )
 
     # Final RAG chain
@@ -65,6 +64,6 @@ def final_prompt(question):
 
     return answer
 
-question = "What do the students have to say about the Bachelors in Chemical Engineering program?"
+question = "What are the 5th semester courses for Bachelor's in Mechanical Engineering?"
 answer = final_prompt(question)
 print(f"ANSWER: {answer}")
