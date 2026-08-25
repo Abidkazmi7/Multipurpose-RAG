@@ -13,3 +13,9 @@ def rerank(query, docs, top_k = 3):
     return [
         doc for score, doc in scored_docs[:top_k]
     ]
+
+def rerank_docs(inputs):
+    return rerank(
+        query = inputs["question"],
+        docs = inputs["docs"]
+    )
