@@ -1,48 +1,54 @@
 from ingestion.pdf_loader import load_pdf
 from ingestion.youtube_loader import load_youtube
-from processing.pdf_chunker import text_chunker
-from processing.youtube_chunker import yt_semantic_chunk
-from vectorstore.chroma_db import vector_database
-from embeddings.models import huggingface_model
+from chunking.pdf_chunker import text_chunker
+from chunking.youtube_chunker import yt_semantic_chunk
+from vectorstore.chroma_db import chroma_retriever
+from vectorstore.parent_store import build_parent_store
+from models.embedding_models import huggingface_model
 from retrieval.multi_query import create_multi_query, get_unique_union
 from retrieval.bm25 import bm25_retriever
 from retrieval.ensemble_retriever import ensemble_retriever
-from models.groq import query_llm
+from models.language_models import query_llm
 
 def build_retriever(chunks):
     model = huggingface_model()
 
-    # Create embeddings for all chunks
-    vector_db = vector_database(chunks, model)
-
-    # Obtain top k relevant chunks
-    vector_retriever = vector_db.as_retriever()
+    # Create semantic retriever
+    semantic_retriever = chroma_retriever(chunks, model)
 
     # Create BM25 retriever
-    bm25 = bm25_retriever(chunks)
+    keyword_retriever = bm25_retriever(chunks)
 
-    retrieved_chunks = ensemble_retriever(
-        bm25,
-        vector_retriever
+    # Build retriever object
+    retriever = ensemble_retriever(
+        keyword_retriever,
+        semantic_retriever
     )
 
-    return retrieved_chunks
+    return retriever
 
-# Document retrieval
+# Document retrieval object
 def doc_retriever(pdf_path):
     docs = load_pdf(pdf_path)
-    chunks = text_chunker(docs)
-    retrieved_chunks = build_retriever(chunks)
 
-    return retrieved_chunks
+    # Parent-child chunking
+    parent_chunks, child_chunks = text_chunker(docs)
 
-# Youtube video retriever
+    # Store parents for later lookup
+    parent_store = build_parent_store(parent_chunks)
+
+    # Retrievers search child chunks
+    retriever = build_retriever(child_chunks)
+
+    return retriever, parent_store
+
+# Youtube video retriever object
 def youtube_retriever(url):
     data = load_youtube(url)
     chunks = yt_semantic_chunk(data["transcript"])
-    retrieved_chunks = build_retriever(chunks)\
+    retriever = build_retriever(chunks)
     
-    return retrieved_chunks
+    return retriever
 
 def retrieval_chain(retriever):
     # Retrieving documents for each query

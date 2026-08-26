@@ -1,6 +1,6 @@
 from ingestion.youtube_loader import load_youtube
 from langchain_experimental.text_splitter import SemanticChunker
-from embeddings.models import huggingface_model
+from models.embedding_models import huggingface_model
 
 model = huggingface_model()
 
