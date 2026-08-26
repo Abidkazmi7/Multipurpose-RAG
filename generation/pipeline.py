@@ -4,11 +4,11 @@ from chunking.pdf_chunker import text_chunker
 from chunking.youtube_chunker import yt_semantic_chunk
 from vectorstore.chroma_db import chroma_retriever
 from vectorstore.parent_store import build_parent_store
-from embeddings.models import huggingface_model
+from models.embedding_models import huggingface_model
 from retrieval.multi_query import create_multi_query, get_unique_union
 from retrieval.bm25 import bm25_retriever
 from retrieval.ensemble_retriever import ensemble_retriever
-from models.groq import query_llm
+from models.language_models import query_llm
 
 def build_retriever(chunks):
     model = huggingface_model()

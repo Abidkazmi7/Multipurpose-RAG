@@ -3,7 +3,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda
 from generation.pipeline import retrieval_chain, youtube_retriever, doc_retriever
 from operator import itemgetter
-from models.groq import answer_llm
+from models.language_models import answer_llm
 from retrieval.reranker import rerank_docs
 from retrieval.fetch_parent_docs import get_parents
 
