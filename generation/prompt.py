@@ -83,7 +83,7 @@ def final_prompt(question):
 
     return result
 
-question = "How does unsupervised pre-training differ from supervised fine-tuning?"
+question = "How does the paper handle supervised fine tuning?"
 result = final_prompt(question)
 
 print(f"ANSWER: {result["answer"]}")
