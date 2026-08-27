@@ -32,9 +32,15 @@ def create_multi_query(llm):
 
 # Get unique documents
 def get_unique_union(documents: list[list]):
-    flattened_docs = [dumps(doc) for sublist in documents for doc in sublist]
+    seen = set()
+    unique_docs = []
 
-    # Removes duplicate documents retrieved from multiple query results
-    unique_docs = list(set(flattened_docs))
+    for sublist in documents:
+        for doc in sublist:
+            child_id = doc.metadata["child_id"]
 
-    return [loads(doc) for doc in unique_docs]
+            if child_id not in seen:
+                seen.add(child_id)
+                unique_docs.append(doc)
+
+    return unique_docs
