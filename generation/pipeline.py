@@ -1,14 +1,18 @@
 from ingestion.pdf_loader import load_pdf
 from ingestion.youtube_loader import load_youtube
+
 from chunking.pdf_chunker import text_chunker
 from chunking.youtube_chunker import yt_semantic_chunk
+
 from vectorstore.chroma_db import chroma_retriever
 from vectorstore.parent_store import build_parent_store
-from models.embedding_models import huggingface_model
+
 from retrieval.multi_query import create_multi_query, get_unique_union
 from retrieval.bm25 import bm25_retriever
 from retrieval.ensemble_retriever import ensemble_retriever
+
 from models.language_models import query_llm
+from models.embedding_models import huggingface_model
 
 def build_retriever(chunks):
     model = huggingface_model()
@@ -16,7 +20,7 @@ def build_retriever(chunks):
     # Create semantic retriever
     semantic_retriever = chroma_retriever(chunks, model)
 
-    # Create BM25 retriever
+    # Create keyword retriever
     keyword_retriever = bm25_retriever(chunks)
 
     # Build retriever object
@@ -29,6 +33,7 @@ def build_retriever(chunks):
 
 # Document retrieval object
 def doc_retriever(pdf_path):
+    # Contains section-level splits
     docs = load_pdf(pdf_path)
 
     # Parent-child chunking

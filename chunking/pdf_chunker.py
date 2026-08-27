@@ -2,7 +2,7 @@ import uuid
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # Convert obtained text from PDF to chunks
-def text_chunker(documents):
+def text_chunker(sections):
     # Parent splitter
     parent_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size = 2000, 
@@ -17,7 +17,7 @@ def text_chunker(documents):
         separators = ["\n\n", "\n", ". ", " ", ""]
     )
 
-    parents = parent_splitter.split_documents(documents)
+    parents = parent_splitter.split_documents(sections)
 
     # Lists for storing each chunk type
     parent_documents = []
@@ -38,7 +38,10 @@ def text_chunker(documents):
 
         # Loop through child chunks
         for child in child_chunks:
+            child_id = str(uuid.uuid4())
+
             child.metadata["parent_id"] = parent_id
+            child.metadata["child_id"] = child_id
             child.metadata["chunk_type"] = "child"
 
             child_documents.append(child)
