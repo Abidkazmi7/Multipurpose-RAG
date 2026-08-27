@@ -1,17 +1,23 @@
+from operator import itemgetter
+
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import RunnableLambda, RunnableParallel
+
 from generation.pipeline import retrieval_chain, youtube_retriever, doc_retriever
-from operator import itemgetter
+
 from models.language_models import answer_llm
+
 from retrieval.reranker import rerank_docs
 from retrieval.fetch_parent_docs import get_parents
+
+from citations.citation import extract_citations
 
 # Link Langsmith
 from dotenv import load_dotenv
 load_dotenv()
 
-pdf_path = "data\Prospectus.pdf"
+pdf_path = "e:\Artificial Intelligence\RAG\Research Paper RAG\knowledge_base\documents\LLM_Improving Language Understanding by Generative Pre-Training.pdf"
 # url = "https://www.youtube.com/watch?v=FLcrvMfHUJM"
 
 # Final prompt fed to LLM
@@ -32,7 +38,6 @@ def final_prompt(question):
 
         Question: {question}
     """
-
     # Get retriever object & parent document store
     retriever, parent_store = doc_retriever(pdf_path)
 
@@ -53,17 +58,33 @@ def final_prompt(question):
 
     # Final RAG chain
     final_rag_chain = (
-        {"context": reranked_retrieval,
-        "question": itemgetter("question")}
-        | prompt
-        | answer_llm
-        | StrOutputParser()
+        {
+            "context": reranked_retrieval,
+            "question": itemgetter("question")
+        }
+        | RunnableParallel(
+            answer = (
+                {
+                    "context": itemgetter("context"),
+                    "question": itemgetter("question")
+                }
+                | prompt
+                | answer_llm
+                | StrOutputParser()
+            ),
+            citations = (
+                itemgetter("context")
+                | RunnableLambda(extract_citations)
+            )
+        )
     )
 
-    answer = final_rag_chain.invoke({"question": question})
+    result = final_rag_chain.invoke({"question": question})
 
-    return answer
+    return result
 
-question = "What are the 5th semester courses for Bachelor's in Mechanical Engineering?"
-answer = final_prompt(question)
-print(f"ANSWER: {answer}")
+question = "How does unsupervised pre-training differ from supervised fine-tuning?"
+result = final_prompt(question)
+
+print(f"ANSWER: {result["answer"]}")
+print(f"CITATIONS: {result["citations"]}")
