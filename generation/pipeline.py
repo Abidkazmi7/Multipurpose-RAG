@@ -1,8 +1,6 @@
 from ingestion.pdf_loader import load_pdf
 from ingestion.youtube_loader import load_youtube
 
-from citations.citation import detect_headers_by_page, attach_page_metadata
-
 from chunking.pdf_chunker import text_chunker
 from chunking.youtube_chunker import yt_semantic_chunk
 
@@ -37,9 +35,6 @@ def build_retriever(chunks):
 def doc_retriever(pdf_path):
     # Contains section-level splits
     docs = load_pdf(pdf_path)
-
-    # Add citations to sections
-    docs = attach_page_metadata(docs, pdf_path)
 
     # Parent-child chunking
     parent_chunks, child_chunks = text_chunker(docs)
