@@ -1,21 +1,24 @@
-from pypdf import PdfReader
-from langchain_core.documents import Document
+import pymupdf4llm
+from langchain_text_splitters import MarkdownHeaderTextSplitter
 
-# Extracts raw text content from PDF 
-def extract_text(pdf_path): 
-    reader = PdfReader(pdf_path) 
-    text = [] 
-
-    for page in reader.pages: 
-        extracted = page.extract_text() 
-
-        if extracted: 
-            text.append(extracted) 
-
-    return "\n".join(text) 
-
-# Obtains LangChain document object with it's associated metadata 
 def load_pdf(pdf_path):
-    text = extract_text(pdf_path) 
-    
-    return [Document(page_content = text, metadata = {"source" : pdf_path})]
+    # Convert entire PDF into one Markdown document
+    markdown = pymupdf4llm.to_markdown(pdf_path)
+
+    # Headers that define sections
+    headers_to_split_on = [
+        ("#", "Header 1"),
+        ("##", "Header 2"),
+        ("###", "Header 3"),
+        ("####", "Header 4")
+    ]
+
+    markdown_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=headers_to_split_on,
+        strip_headers=False
+    )
+
+    # Split the entire Markdown document into sections
+    sections = markdown_splitter.split_text(markdown)
+
+    return sections
