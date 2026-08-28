@@ -1,4 +1,3 @@
-from ingestion.youtube_loader import load_youtube
 from langchain_experimental.text_splitter import SemanticChunker
 from models.embedding_models import huggingface_model
 
