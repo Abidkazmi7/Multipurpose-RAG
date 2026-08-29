@@ -37,10 +37,10 @@ def get_unique_union(documents: list[list]):
 
     for sublist in documents:
         for doc in sublist:
-            child_id = doc.metadata["child_id"]
+            doc_id = doc.metadata["chunk_id"]
 
-            if child_id not in seen:
-                seen.add(child_id)
+            if doc_id not in seen:
+                seen.add(doc_id)
                 unique_docs.append(doc)
-
+                
     return unique_docs

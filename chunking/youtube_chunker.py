@@ -9,4 +9,7 @@ def yt_semantic_chunk(transcript):
     full_text = " ".join(item["text"] for item in transcript)
     chunks = chunker.create_documents([full_text])
 
+    for i, chunk in enumerate(chunks):
+        chunk.metadata["chunk_id"] = str(i)
+
     return chunks

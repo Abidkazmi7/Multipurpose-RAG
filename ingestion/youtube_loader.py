@@ -38,7 +38,7 @@ def get_transcript(url):
 
 # Get video metadata
 def get_metadata(url):
-    yt = YouTube(url)
+    yt = YouTube(url, 'WEB')
 
     metadata = {
         "source_type": "youtube",

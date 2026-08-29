@@ -29,7 +29,7 @@ def text_chunker(sections):
         parent_id = str(uuid.uuid4())
 
         # Add ID to chunk metadata
-        parent.metadata["parent_id"] = parent_id
+        parent.metadata["chunk_id"] = parent_id
         parent.metadata["chunk_type"] = "parent"
 
         parent_documents.append(parent)
@@ -41,7 +41,7 @@ def text_chunker(sections):
             child_id = str(uuid.uuid4())
 
             child.metadata["parent_id"] = parent_id
-            child.metadata["child_id"] = child_id
+            child.metadata["chunk_id"] = child_id
             child.metadata["chunk_type"] = "child"
 
             child_documents.append(child)
