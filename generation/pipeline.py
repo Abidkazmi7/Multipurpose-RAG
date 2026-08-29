@@ -1,8 +1,10 @@
 from ingestion.pdf_loader import load_pdf
 from ingestion.youtube_loader import load_youtube
+from ingestion.web_loader import load_webpage
 
 from chunking.pdf_chunker import text_chunker
 from chunking.youtube_chunker import yt_semantic_chunk
+from chunking.web_chunker import webpage_chunker
 
 from vectorstore.chroma_db import chroma_retriever
 from vectorstore.parent_store import build_parent_store
@@ -51,6 +53,14 @@ def doc_retriever(pdf_path):
 def youtube_retriever(url):
     data = load_youtube(url)
     chunks = yt_semantic_chunk(data["transcript"])
+    retriever = build_retriever(chunks)
+    
+    return retriever
+
+# Webpage retriever object
+def webpage_retriever(url):
+    docs = load_webpage(url)
+    chunks = webpage_chunker(docs)
     retriever = build_retriever(chunks)
     
     return retriever
