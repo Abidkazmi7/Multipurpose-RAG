@@ -1,20 +1,20 @@
-from ingestion.pdf_loader import load_pdf
-from ingestion.youtube_loader import load_youtube
-from ingestion.web_loader import load_webpage
+from rag.ingestion.pdf_loader import load_pdf
+from rag.ingestion.youtube_loader import load_youtube
+from rag.ingestion.web_loader import load_webpage
 
-from chunking.pdf_chunker import text_chunker
-from chunking.youtube_chunker import yt_semantic_chunk
-from chunking.web_chunker import webpage_chunker
+from rag.chunking.pdf_chunker import text_chunker
+from rag.chunking.youtube_chunker import yt_semantic_chunk
+from rag.chunking.web_chunker import webpage_chunker
 
-from vectorstore.chroma_db import chroma_retriever
-from vectorstore.parent_store import build_parent_store
+from rag.vectorstore.chroma_db import chroma_retriever
+from rag.vectorstore.parent_store import build_parent_store
 
-from retrieval.multi_query import create_multi_query, get_unique_union
-from retrieval.bm25 import bm25_retriever
-from retrieval.ensemble_retriever import ensemble_retriever
+from rag.retrieval.multi_query import create_multi_query, get_unique_union
+from rag.retrieval.bm25 import bm25_retriever
+from rag.retrieval.ensemble_retriever import ensemble_retriever
 
-from models.language_models import query_llm
-from models.embedding_models import huggingface_model
+from rag.models.language_models import query_llm
+from rag.models.embedding_models import huggingface_model
 
 def build_retriever(chunks):
     model = huggingface_model()

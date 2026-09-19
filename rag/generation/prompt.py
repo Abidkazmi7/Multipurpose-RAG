@@ -4,22 +4,22 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 
-from generation.pipeline import retrieval_chain, youtube_retriever, doc_retriever, webpage_retriever
+from rag.generation.pipeline import retrieval_chain, youtube_retriever, doc_retriever, webpage_retriever
 
-from models.language_models import answer_llm
+from rag.models.language_models import answer_llm
 
-from retrieval.reranker import rerank_docs
-from retrieval.fetch_parent_docs import get_parents
+from rag.retrieval.reranker import rerank_docs
+from rag.retrieval.fetch_parent_docs import get_parents
 
-from citations.citation import extract_citations
+from rag.citations.citation import extract_citations
 
 # Link Langsmith
 from dotenv import load_dotenv
 load_dotenv()
 
-# pdf_path = "e:\Artificial Intelligence\RAG\Research Paper RAG\knowledge_base\documents\LLM_Improving Language Understanding by Generative Pre-Training.pdf"
+pdf_path = "e:\Artificial Intelligence\RAG\Research Paper RAG\knowledge_base\documents\LLM_Improving Language Understanding by Generative Pre-Training.pdf"
 # yt_url = "https://youtu.be/HQA7fxZ-_r0?si=VNdQiZfX-IVWhWdt"
-web_url = "https://www.ibm.com/think/insights/10-ai-dangers-and-risks-and-how-to-manage-them"
+# web_url = "https://www.ibm.com/think/insights/10-ai-dangers-and-risks-and-how-to-manage-them"
 
 # Final prompt fed to LLM
 def final_prompt(question):
@@ -54,9 +54,9 @@ def final_prompt(question):
     # Get retriever object & parent document store
 
     parent_store = None
-    # retriever, parent_store = doc_retriever(pdf_path)
+    retriever, parent_store = doc_retriever(pdf_path)
     # retriever = youtube_retriever(yt_url)
-    retriever = webpage_retriever(web_url)
+    # retriever = webpage_retriever(web_url)
 
     # Retrieve unique docs
     chain = retrieval_chain(retriever)
@@ -104,7 +104,7 @@ def final_prompt(question):
 
     return result
 
-question = "How does AI affect the job market and what can we do to be safe?"
+question = "What goal does this paper aim to achieve?"
 result = final_prompt(question)
 
 print(f"ANSWER: {result["answer"]}")

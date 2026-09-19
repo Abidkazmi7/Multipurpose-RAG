@@ -1,4 +1,4 @@
-from models.embedding_models import crossencoder_model
+from rag.models.embedding_models import crossencoder_model
 
 model = crossencoder_model()
 
