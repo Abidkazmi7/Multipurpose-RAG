@@ -1,9 +1,5 @@
-from rag.models.embedding_models import crossencoder_model
-
-model = crossencoder_model()
-
 # Reranking function
-def rerank(query, docs, top_k = 3):
+def rerank(query, docs, model, top_k = 3):
     pairs = [[query, doc.page_content] for doc in docs]
 
     scores = model.predict(pairs)
@@ -14,8 +10,9 @@ def rerank(query, docs, top_k = 3):
         doc for score, doc in scored_docs[:top_k]
     ]
 
-def rerank_docs(inputs):
+def rerank_docs(inputs, model):
     return rerank(
         query = inputs["question"],
-        docs = inputs["docs"]
+        docs = inputs["docs"],
+        model = model
     )

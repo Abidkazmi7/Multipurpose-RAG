@@ -13,9 +13,15 @@ from rag.retrieval.fetch_parent_docs import get_parents
 
 from rag.citations.citation import extract_citations
 
+from backend.resources import resources
+
 # Link Langsmith
 from dotenv import load_dotenv
 load_dotenv()
+
+# Load models
+embedding_model = resources.embedding_model
+reranker = resources.reranker
 
 pdf_path = "e:\Artificial Intelligence\RAG\Research Paper RAG\knowledge_base\documents\LLM_Improving Language Understanding by Generative Pre-Training.pdf"
 # yt_url = "https://youtu.be/HQA7fxZ-_r0?si=VNdQiZfX-IVWhWdt"
@@ -24,7 +30,8 @@ pdf_path = "e:\Artificial Intelligence\RAG\Research Paper RAG\knowledge_base\doc
 # Final prompt fed to LLM
 def final_prompt(question):
     doc_template = """
-        Answer the following question based strictly on this context:
+        Answer the following question based strictly on this context.
+        If the context is insufficient, just say you don't know.
 
         {context}
 
@@ -54,9 +61,9 @@ def final_prompt(question):
     # Get retriever object & parent document store
 
     parent_store = None
-    retriever, parent_store = doc_retriever(pdf_path)
-    # retriever = youtube_retriever(yt_url)
-    # retriever = webpage_retriever(web_url)
+    retriever, parent_store = doc_retriever(pdf_path, embedding_model)
+    # retriever = youtube_retriever(yt_url, embedding_model)
+    # retriever = webpage_retriever(web_url, embedding_model)
 
     # Retrieve unique docs
     chain = retrieval_chain(retriever)
@@ -69,7 +76,9 @@ def final_prompt(question):
             "docs" : chain,
             "question" : itemgetter("question")
         }
-        | RunnableLambda(rerank_docs)
+        | RunnableLambda(
+            lambda inputs: rerank_docs(inputs, reranker)
+        )
         | RunnableLambda(
                 lambda docs: get_parents(docs, parent_store)
                 if parent_store is not None

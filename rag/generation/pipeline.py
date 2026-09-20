@@ -14,13 +14,10 @@ from rag.retrieval.bm25 import bm25_retriever
 from rag.retrieval.ensemble_retriever import ensemble_retriever
 
 from rag.models.language_models import query_llm
-from rag.models.embedding_models import huggingface_model
 
-def build_retriever(chunks):
-    model = huggingface_model()
-
+def build_retriever(chunks, embedding_model):
     # Create semantic retriever
-    semantic_retriever = chroma_retriever(chunks, model)
+    semantic_retriever = chroma_retriever(chunks, embedding_model)
 
     # Create keyword retriever
     keyword_retriever = bm25_retriever(chunks)
@@ -34,7 +31,7 @@ def build_retriever(chunks):
     return retriever
 
 # Document retrieval object
-def doc_retriever(pdf_path):
+def doc_retriever(pdf_path, embedding_model):
     # Contains section-level splits
     docs = load_pdf(pdf_path)
 
@@ -45,23 +42,23 @@ def doc_retriever(pdf_path):
     parent_store = build_parent_store(parent_chunks)
 
     # Retrievers search child chunks
-    retriever = build_retriever(child_chunks)
+    retriever = build_retriever(child_chunks, embedding_model)
 
     return retriever, parent_store
 
 # Youtube video retriever object
-def youtube_retriever(url):
+def youtube_retriever(url, embedding_model):
     data = load_youtube(url)
-    chunks = yt_semantic_chunk(data["transcript"])
-    retriever = build_retriever(chunks)
+    chunks = yt_semantic_chunk(data["transcript"], embedding_model)
+    retriever = build_retriever(chunks, embedding_model)
     
     return retriever
 
 # Webpage retriever object
-def webpage_retriever(url):
+def webpage_retriever(url, embedding_model):
     docs = load_webpage(url)
     chunks = webpage_chunker(docs)
-    retriever = build_retriever(chunks)
+    retriever = build_retriever(chunks, embedding_model)
     
     return retriever
 
