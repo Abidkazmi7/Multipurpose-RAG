@@ -11,7 +11,7 @@ from rag.models.language_models import(
 class Resources:
     def __init__(self):
         print("Initializing LLM models...")
-        self.multiquery_model = query_llm
+        self.query_model = query_llm
         self.answer_model = answer_llm
 
         print("Loading embedding model...")
