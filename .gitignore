@@ -6,15 +6,13 @@ venv/
 __pycache__/
 *.pyc
 
-# PDF files
-*.pdf
-
 # Chroma DB files
 *.sqlite3
 *.bin
 
 # Test folder
 tests/
+data/
 
 # Environment files
 *.env
