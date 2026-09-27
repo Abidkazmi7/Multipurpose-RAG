@@ -2,6 +2,7 @@ from operator import itemgetter
 
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
+from langchain_core.messages import HumanMessage
 
 from rag.generation.pipeline import(
     retrieval_chain,
@@ -14,6 +15,7 @@ from rag.retrieval.reranker import rerank_docs
 from rag.retrieval.fetch_parent_docs import get_parents
 from rag.citations.citation import extract_citations
 
+from backend.database import checkpointer
 from backend.graph import create_chat_graph
 
 class Chat:
@@ -27,6 +29,7 @@ class Chat:
         self.extract_citations = extract_citations
         self.graph = None
 
+    # Initialize chatbot
     def initialize(self, modality, source):
         self.modality = modality
 
@@ -54,28 +57,26 @@ class Chat:
         # Answer prompts
         self.build_answer_prompt()
 
-        # Initialize graph
-        self.graph = create_chat_graph(self)
+        # Initialize graph with database
+        self.graph = create_chat_graph(self, checkpointer)
 
-    def ask(self, question, thread_id):
-        config = {
-            "configurable": {"thread_id": thread_id}
-        }
-
-        result = self.graph.invoke(
+    # Message streaming
+    def stream(self, question, thread_id):
+        return self.graph.stream(
             {
                 "messages": [
-                    {
-                        "role": "user",
-                        "content": question
-                    }
+                    HumanMessage(content=question)
                 ]
             },
-            config = config
+            config={
+                "configurable": {
+                    "thread_id": thread_id
+                }
+            },
+            stream_mode="messages"
         )
 
-        return result
-    
+    # Retrieval logic
     def build_retrieval_chain(self):
         chain = retrieval_chain(self.retriever)
 
@@ -94,6 +95,7 @@ class Chat:
                 )
         )
 
+    # Choose one of four answer prompts based on modality
     def build_answer_prompt(self):
         self.general_answer_prompt = ChatPromptTemplate.from_messages([
             (

@@ -3,7 +3,6 @@ from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
-from langgraph.checkpoint.memory import MemorySaver
 
 from backend.resources import query_llm
 
@@ -32,9 +31,10 @@ class ChatState(TypedDict):
     # Source of answer (User documents/LLM knowledge)
     answer_src: str
 
-def create_chat_graph(chat):
+def create_chat_graph(chat, checkpointer):
     graph = StateGraph(ChatState)
 
+    # Contextualize the query with past conversation history
     def contextualize_node(state: ChatState):
         conversation = state["messages"][:-1]
         question = state["messages"][-1].content
@@ -150,10 +150,11 @@ def create_chat_graph(chat):
         })
 
         return{
-            "messages": response,
+            "messages": [response],
             "answer_source": "llm"
         }
 
+    # Graph structure
     graph.add_node("contextualize_query", contextualize_node)
     graph.add_node("retrieve", retrieve_node)
     graph.add_node("judge", judge_node)
@@ -175,8 +176,6 @@ def create_chat_graph(chat):
 
     graph.add_edge("generate_using_retrieval", END)
     graph.add_edge("generate_using_llm", END)
-
-    checkpointer = MemorySaver()
 
     return graph.compile(
         checkpointer = checkpointer
