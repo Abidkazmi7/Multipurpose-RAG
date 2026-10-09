@@ -98,12 +98,22 @@ def create_chat_graph(chat, checkpointer):
         prompt = """
         You are a context-relevance judge for a RAG system.
 
-        Determine whether the provided context contains enough information
-        to answer the user's question accurately.
+        Your task is to decide whether the retrieved context should be used
+        to answer the user's question.
 
-        Return true ONLY if the question can be answered using the provided
-        context. Return false if the context is missing, irrelevant, or
-        insufficient to answer the question.
+        IMPORTANT:
+        - This is a retrieval-first system.
+        - If the retrieved context contains information that is relevant to
+        the question, return true.
+        - Do NOT reject the context simply because it does not provide a
+        complete or perfect answer.
+        - If the context provides useful facts, explanations, evidence, or
+        partial information relevant to the question, return true.
+        - Return false ONLY when the context is clearly irrelevant to the
+        question or contains no useful information for answering it.
+        - The LLM's own knowledge must be treated as a LAST RESORT.
+        - Do not use your own knowledge when judging whether the context is
+        relevant.
 
         Question:
         {question}
