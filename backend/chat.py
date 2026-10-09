@@ -23,16 +23,32 @@ class Chat:
         self.resources = resources
 
         self.modality = None
+        self.source = None
+
         self.retriever = None
         self.retrieval_chain = None
         self.parent_store = None
+
         self.extract_citations = extract_citations
         self.graph = None
 
     # Initialize chatbot
     def initialize(self, modality, source):
-        self.modality = modality
+        if modality not in {"document", "youtube", "web"}:
+            raise ValueError(f"Unsupported modality: {modality}")
 
+        if not source:
+            raise ValueError("Source cannot be empty")
+
+        self.modality = modality
+        self.source = source
+
+        # Clear previous source-specific state
+        self.retriever = None
+        self.retrieval_chain = None
+        self.parent_store = None
+
+        # Build modality specific retriever
         if modality == "document":
             self.retriever, self.parent_store = doc_retriever(
                 source, self.resources.embedding_model
@@ -50,6 +66,8 @@ class Chat:
 
         else:
             raise ValueError(f"Unsupported modality: {modality}")
+
+        # Build source specific RAG components
 
         # Create RAG workflow
         self.build_retrieval_chain()
