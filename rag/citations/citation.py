@@ -3,10 +3,10 @@ def extract_citations(documents):
     citations = []
 
     for document in documents:
-        section = document.metadata.get("Header 2"),
+        section = document.metadata.get("Header 2")
         subsection = document.metadata.get("Header 3")
 
-        if section is not None or subsection is not None:
+        if section or subsection:
             citations.append({
                 "section": section,
                 "subsection": subsection

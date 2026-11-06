@@ -2,11 +2,17 @@ import streamlit as st
 import uuid
 import os
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 from backend.chat import Chat
 from backend.resources import resources
 from backend.database import create_thread, get_thread, retrieve_all_threads
+
+if "modality" not in st.session_state:
+    st.session_state.modality = None
+
+if "source" not in st.session_state:
+    st.session_state.source = None
 
 # -------------------- UTILITY FUNCTIONS --------------------
 
@@ -133,20 +139,62 @@ for thread_id in st.session_state.chat_threads[::-1]:
 
         for msg in messages:
             if isinstance(msg, HumanMessage):
-                role = 'user'
+                role = "user"
+            elif isinstance(msg, AIMessage):
+                role = "assistant"
             else:
-                role = 'assistant'
+                continue
 
-            temp_messages.append({'role': role, 'content': msg.content})
+            temp_messages.append({
+                "role": role,
+                "content": msg.content,
+                "citations": (
+                    msg.additional_kwargs.get("citations", [])
+                    if role == "assistant"
+                    else []
+                ),
+                "answer_src": (
+                    msg.additional_kwargs.get("answer_src")
+                    if role == "assistant"
+                    else None
+                )
+            })
 
         st.session_state.message_history = temp_messages
 
 # -------------------- MAIN UI --------------------
 
+# Display source at the top of the chat
+modality = st.session_state.modality
+source = st.session_state.source
+
+if modality and source:
+    if modality == "document":
+        st.write(f"📄 Document: {os.path.basename(source)}")
+
+    elif modality == "web":
+        st.write(f"🌐 Web link: {source}")
+
+    elif modality == "youtube":
+        st.write(f"▶️ YouTube: {source}")
+
 # Display previous messages
 for message in st.session_state.message_history:
     with st.chat_message(message["role"]):
         st.write(message["content"])
+
+        if message["role"] == "assistant":
+            citations = message.get("citations", [])
+            answer_src = message.get("answer_src")
+
+            if answer_src == "knowledge_base":
+                st.caption("Answered using your knowledge base")
+            elif answer_src == "llm":
+                st.caption("Answered using LLM knowledge")
+
+            if citations:
+                with st.expander("📚 Sources & Citations"):
+                    st.table(citations)
 
 # Chat input
 user_input = st.chat_input(
@@ -177,7 +225,30 @@ if user_input:
             ]
         )
 
+    config = {
+        "configurable": {
+            "thread_id": st.session_state.thread_id
+        }
+    }
+
+    final_state = st.session_state.chat.graph.get_state(config)
+
+    citations = final_state.values.get("citations", [])
+    answer_src = final_state.values.get("answer_src") 
+
+    if answer_src == "knowledge_base": 
+        st.caption("Answered using your knowledge base") 
+    
+    elif answer_src == "llm": 
+        st.caption("Answered using LLM knowledge")
+
+    if citations:
+        with st.expander("📚 Sources & Citations"):
+            st.table(citations)
+
     st.session_state.message_history.append({
         "role": "assistant",
-        "content": ai_message
+        "content": ai_message,
+        "citations": citations,
+        "answer_src": answer_src
     })

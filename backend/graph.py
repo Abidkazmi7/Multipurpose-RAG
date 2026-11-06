@@ -145,9 +145,24 @@ def create_chat_graph(chat, checkpointer):
             "context": state["context"]
         })
 
+        # Get citations for current answer from state
+        citations = state.get("citations", [])
+
+        # Attach citation/source metadata to answer
+        response = response.model_copy(
+            update = { 
+                "additional_kwargs": { 
+                    **response.additional_kwargs, 
+                    "citations": citations,
+                    "answer_src": "knowledge_base"
+                } 
+            } 
+        )
+
+        # Update graph state
         return {
             "messages": [response],
-            "answer_source": "knowledge_base"
+            "answer_src": "knowledge_base"
         }
 
     # Generate using LLM's knowledge
@@ -159,9 +174,22 @@ def create_chat_graph(chat, checkpointer):
             "messages": state["messages"]
         })
 
+        # Attach citation/source metadata to answer
+        response = response.model_copy(
+            update = { 
+                "additional_kwargs": { 
+                    **response.additional_kwargs, 
+                    "citations": [],
+                    "answer_src": "llm"
+                } 
+            } 
+        )
+
+        # Update graph state
         return{
             "messages": [response],
-            "answer_source": "llm"
+            "citations": [],
+            "answer_src": "llm"
         }
 
     # Graph structure
