@@ -58,6 +58,14 @@ The diagram below follows one user question from the UI to the final answer. Ing
 ```mermaid
 sequenceDiagram
     autonumber
+    actor U as User
+    participant FE as Frontend
+    participant BE as Backend
+    participant G as LangGraph Workflow
+    participant DB as SQLite
+    participant R as Retrieval Layer
+    participant L as LLM
+
     rect rgba(30, 136, 229, 0.12)
         U->>FE: Ask a question in a conversation
         FE->>BE: Send query and thread id
