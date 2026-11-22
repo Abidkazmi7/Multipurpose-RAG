@@ -1,8 +1,6 @@
 # Multipurpose-RAG
 
-A multi-purpose Retrieval-Augmented Generation (RAG) system that lets you chat with **documents**, **web links** and **YouTube videos**. Each modality has its own ingestion and chunking strategy. The retrieval layer is built with **LangChain** and sits inside a larger decision-making workflow built with **LangGraph**. Conversations are persisted in **SQLite**, so a chat can be resumed and each follow-up question is understood in context.
-
-> This project was built to learn the fundamentals of RAG end to end: ingestion, chunking, retrieval, reranking, orchestration, persistence and citations. Vanilla RAG is no longer state of the art, but these building blocks are what agentic applications are made of.
+A multi-purpose Retrieval-Augmented Generation (RAG) system that lets you chat with **Documents**, **Web Links** and **YouTube Videos**. Each modality has its own ingestion and chunking strategy. The retrieval layer is built with **LangChain** and sits inside a larger decision-making workflow built with **LangGraph**. Conversations are persisted in **SQLite**, so a chat can be resumed and each follow-up question is understood in context.
 
 ---
 
@@ -32,11 +30,11 @@ A multi-purpose Retrieval-Augmented Generation (RAG) system that lets you chat w
 - **Self-assessing answers.** An LLM judge decides whether the retrieved context is sufficient. If it is, the answer is grounded in the user's knowledge base. If it is not, the system answers from the LLM's own knowledge.
 - **Conversation-aware.** Every query is rewritten into a standalone query using the full conversation history, so ambiguous follow-ups such as "what about the second one?" still retrieve correctly.
 - **Persistent conversations.** Chat history is stored in SQLite and organised into threads.
-- **Citations** for the document and web modalities.
+- **Citations.** For the document and web modalities.
 
 ---
 
-## Repository structure
+## Repository Structure
 
 ```text
 Multipurpose-RAG/
@@ -46,14 +44,11 @@ Multipurpose-RAG/
 ├── .gitignore
 └── README.md
 ```
-
-<!-- VERIFY: one-line role of each folder, and list the key files inside each (e.g. the graph definition, the database module, one file per ingestion pipeline). -->
-
 ---
 
 ## How a single query flows through the system
 
-The diagram below follows one user question from the UI to the final answer. Ingestion happens before this point, when the user adds a document, web link or YouTube video (see [Ingestion and chunking](#ingestion-and-chunking)).
+The diagram below follows one user question from the UI to the final answer. Ingestion happens before this point, when the user adds a Document, Web Link or YouTube Video (see [Ingestion and Chunking](#ingestion-and-chunking)).
 
 ```mermaid
 sequenceDiagram
@@ -111,7 +106,7 @@ sequenceDiagram
 
 ---
 
-## Ingestion and chunking
+## Ingestion and Chunking
 
 Chunking quality sets the ceiling for retrieval quality, so each source type gets its own pipeline instead of one generic splitter.
 
@@ -163,7 +158,7 @@ flowchart TB
     style YT fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100
 ```
 
-### 1. Documents: structure-aware splitting and parent-child chunking
+### 1. Documents: Structure-Aware Splitting and Parent-Child Chunking
 
 1. **Convert to Markdown.** The document's text is converted to Markdown so that its structure (headings and subheadings) is explicit.
 2. **Structure-aware splitting.** The Markdown is split on headers and subheaders. Each resulting section is a coherent unit of the document rather than an arbitrary window of characters.
@@ -173,7 +168,7 @@ flowchart TB
 
 Documents such as PDFs often contain long bodies of text under a single heading. That is where parent-child chunking helps: you retrieve with precision and generate with context.
 
-### 2. Web links: structure-aware splitting and recursive chunking
+### 2. Web links: Structure-Aware Splitting and Recursive Chunking
 
 1. **Extract text** from the page's HTML.
 2. **Structure-aware splitting** on headers and subheaders, as with documents.
@@ -181,7 +176,7 @@ Documents such as PDFs often contain long bodies of text under a single heading.
 
 Parent-child chunking is deliberately *not* used here. Web pages usually do not contain the long, dense bodies of text that PDFs do, so a second chunk level adds complexity without much benefit.
 
-### 3. YouTube transcripts: semantic chunking
+### 3. YouTube Transcripts: Semantic Chunking
 
 A transcript has no headings or sections to split on, so structure-aware splitting is not possible. Instead, the transcript is split using **semantic chunking** with a LangChain library:
 
@@ -201,7 +196,7 @@ A transcript has no headings or sections to split on, so structure-aware splitti
 
 ---
 
-## Retrieval layer (LangChain)
+## Retrieval Layer (LangChain)
 
 The retrieval layer is built entirely with LangChain. It is one stage inside the LangGraph workflow, not the whole system. It runs in three stages: query expansion, hybrid retrieval, and reranking.
 
@@ -242,7 +237,7 @@ flowchart TB
 
 Similarity search is sensitive to how a question is phrased. A single query can miss relevant chunks purely because of wording. A Multi-Query step uses an LLM to rewrite the original query into **3 enhanced queries**, each approaching the question from a slightly different angle, which reduces that fragility.
 
-### Stage 2: Hybrid retrieval (BM25 and semantic)
+### Stage 2: Hybrid Retrieval (BM25 & Semantic)
 
 Each of the 3 queries goes through **hybrid retrieval**:
 
@@ -251,17 +246,15 @@ Each of the 3 queries goes through **hybrid retrieval**:
 
 Using both means keywords and meaning are given importance. Neither method alone covers both cases.
 
-### Stage 3: Cross-Encoder reranking
+### Stage 3: Cross-Encoder Reranking
 
 The merged results from hybrid retrieval go to a **Cross-Encoder reranker**. Unlike embedding search, which encodes the query and each chunk separately, a cross-encoder reads the query and a chunk together and scores how well they match. That is more accurate but slower, so it is only applied to the candidate pool and not the whole index. The output is a ranking that puts the most relevant chunks first.
 
 For the document modality, the child chunks that win retrieval are used to bring in their **parent chunks** as the context passed to the LLM.
 
-<!-- VERIFY: how the BM25 and semantic result lists are combined (e.g. LangChain's EnsembleRetriever with reciprocal rank fusion), the number of candidates retrieved per query, the cross-encoder model, the final top-k passed to the LLM, and whether parent resolution happens before or after reranking. -->
-
 ---
 
-## Workflow orchestration (LangGraph)
+## Workflow Orchestration (LangGraph)
 
 The system is a **LangGraph** state graph. The retrieval layer is just one node in it. The graph decides *what to do* with the retrieved information, which is what separates this from a fixed retrieve-then-generate pipeline.
 
@@ -312,22 +305,20 @@ The **Judge** node feeds a **conditional edge**. The two branches (knowledge-bas
 
 This keeps the system from forcing an answer out of irrelevant chunks. If the user's sources do not cover the question, the system falls back to the model's own knowledge instead of producing a poorly grounded answer.
 
-### Conversation history
+### Conversation History
 
 The past conversation is used in more than one place, not only at the start:
 
 - by **Contextualize Query**, to resolve references and ambiguity;
 - by **both answer nodes**, so the generated response is consistent with the ongoing conversation.
 
-<!-- VERIFY: actual node names, the graph state schema (e.g. messages, original query, contextualized query, retrieved chunks, judge verdict, answer, citations), and how the judge's verdict is encoded (e.g. structured output) and read by the conditional edge. -->
-
 ---
 
-## Persistence, threads and the database
+## Persistence, Threads and the Database
 
 Conversations are stored in **SQLite**, a lightweight, serverless, file-based database that is a good fit for a single-user or small-scale application.
 
-### Why persistence matters here
+### Why Persistence matters here
 
 Persistence is more than a convenience feature in this design. The workflow depends on conversation history: **Contextualize Query** and both answer nodes read past messages. The history therefore has to be reliably stored and correctly scoped to the right conversation.
 
@@ -366,14 +357,6 @@ flowchart LR
 
 ### Database
 
-<!-- VERIFY and fill in. Describe the real implementation. For example:
-     - whether you use LangGraph's SQLite checkpointer, custom tables, or both
-     - the tables and columns (threads/conversations, messages, ...)
-     - how thread ids are generated
-     - how connections are managed across concurrent requests (SQLite connections and threads need care)
-     - how the frontend lists and switches between past conversations
--->
-
 | Concept | Implementation |
 |---|---|
 | Database | SQLite |
@@ -389,11 +372,9 @@ Answers show their sources for the **document** and **web** modalities. Source i
 
 Citations for **YouTube transcripts** are not implemented. See [Limitations](#limitations).
 
-<!-- VERIFY: exactly which metadata fields are shown for documents (file, page, heading) and for web pages (URL, section). -->
-
 ---
 
-## LLM call budget
+## LLM Call Budget
 
 Every user query makes **4 LLM API calls**:
 
@@ -406,11 +387,9 @@ Every user query makes **4 LLM API calls**:
 
 BM25, embedding search and the Cross-Encoder do not count towards this total.
 
-<!-- VERIFY: that calls 1-4 map to these stages and that embeddings and reranking are run locally. -->
-
 ---
 
-## Design decisions
+## Design Decisions
 
 | Decision | Reasoning |
 |---|---|
@@ -436,7 +415,7 @@ BM25, embedding search and the Cross-Encoder do not count towards this total.
 
 ---
 
-## Future work
+## Future Work
 
 - **Evaluation.** Build an evaluation set and measure retrieval (hit rate, MRR, recall at k) and generation (faithfulness, answer relevance) separately.
 - **YouTube citations.** Keep timestamp metadata through chunking so answers can link to the relevant moment in a video.
@@ -445,7 +424,7 @@ BM25, embedding search and the Cross-Encoder do not count towards this total.
 
 ---
 
-## Tech stack
+## Tech Stack
 
 | Area | Technology |
 |---|---|
@@ -456,49 +435,6 @@ BM25, embedding search and the Cross-Encoder do not count towards this total.
 | Reranking | Cross-Encoder |
 | Database | SQLite |
 | Language | Python |
-
-<!-- VERIFY and add specifics: LLM provider and model, embedding model, vector store, cross-encoder model, document-to-Markdown library, YouTube transcript library, backend framework, frontend framework. -->
-
----
-
-## Getting started
-
-<!-- VERIFY: replace the placeholders below with the real commands, file names and environment variables. -->
-
-### Prerequisites
-
-- Python 3.x
-- An API key for the LLM provider you use
-
-### Installation
-
-```bash
-git clone https://github.com/Abidkazmi7/Multipurpose-RAG.git
-cd Multipurpose-RAG
-
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-pip install -r <path/to/requirements.txt>
-```
-
-### Configuration
-
-Create a `.env` file with the required keys:
-
-```env
-<LLM_PROVIDER_API_KEY>=your-key-here
-```
-
-### Run
-
-```bash
-# Backend
-<command to start the backend>
-
-# Frontend
-<command to start the frontend>
-```
 
 ---
 
