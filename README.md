@@ -58,46 +58,47 @@ The diagram below follows one user question from the UI to the final answer. Ing
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as User
-    participant FE as Frontend
-    participant BE as Backend
-    participant G as LangGraph Workflow
-    participant DB as SQLite
-    participant R as Retrieval Layer
-    participant L as LLM
-
-    U->>FE: Ask a question in a conversation
-    FE->>BE: Send query and thread id
-    BE->>G: Invoke the graph for this thread
-    G->>DB: Load past conversation
-    DB-->>G: Conversation history
-
-    G->>L: Contextualize query using history (LLM call 1)
-    L-->>G: Standalone query
-
-    G->>R: Retrieve for the standalone query
-    R->>L: Rewrite into 3 enhanced queries (LLM call 2)
-    L-->>R: Query 1, Query 2, Query 3
-    loop For each of the 3 queries
-        R->>R: Hybrid retrieval - BM25 and semantic search
+    rect rgba(30, 136, 229, 0.12)
+        U->>FE: Ask a question in a conversation
+        FE->>BE: Send query and thread id
+        BE->>G: Invoke the graph for this thread
+        G->>DB: Load past conversation
+        DB-->>G: Conversation history
     end
-    R->>R: Merge candidates and rerank with cross-encoder
-    R-->>G: Ranked chunks
 
-    G->>L: Judge - are these chunks sufficient? (LLM call 3)
-    L-->>G: Verdict
-
-    alt Chunks are sufficient
-        G->>L: Answer using the user knowledge base (LLM call 4)
-    else Chunks are not sufficient
-        G->>L: Answer using LLM knowledge (LLM call 4)
+    rect rgba(251, 140, 0, 0.14)
+        G->>L: Contextualize query using history (LLM call 1)
+        L-->>G: Standalone query
     end
-    L-->>G: Answer
 
-    G->>DB: Persist the new turn
-    G-->>BE: Answer and citations
-    BE-->>FE: Response
-    FE-->>U: Answer with citations
+    rect rgba(67, 160, 71, 0.14)
+        G->>R: Retrieve for the standalone query
+        R->>L: Rewrite into 3 enhanced queries (LLM call 2)
+        L-->>R: Query 1, Query 2, Query 3
+        loop For each of the 3 queries
+            R->>R: Hybrid retrieval - BM25 and semantic search
+        end
+        R->>R: Merge candidates and rerank with cross-encoder
+        R-->>G: Ranked chunks
+    end
+
+    rect rgba(216, 27, 96, 0.12)
+        G->>L: Judge - are these chunks sufficient? (LLM call 3)
+        L-->>G: Verdict
+        alt Chunks are sufficient
+            G->>L: Answer using the user knowledge base (LLM call 4)
+        else Chunks are not sufficient
+            G->>L: Answer using LLM knowledge (LLM call 4)
+        end
+        L-->>G: Answer
+    end
+
+    rect rgba(94, 53, 177, 0.14)
+        G->>DB: Persist the new turn
+        G-->>BE: Answer and citations
+        BE-->>FE: Response
+        FE-->>U: Answer with citations
+    end
 ```
 
 ---
@@ -136,6 +137,22 @@ flowchart TB
     Y3 --> IDX
     IDX --> RET([Retrieval])
     PS -.->|"parent context<br/>for generation"| RET
+
+    classDef docNode fill:#BBDEFB,stroke:#1E88E5,color:#0D47A1,stroke-width:2px
+    classDef webNode fill:#C8E6C9,stroke:#43A047,color:#1B5E20,stroke-width:2px
+    classDef ytNode fill:#FFE0B2,stroke:#FB8C00,color:#E65100,stroke-width:2px
+    classDef storage fill:#EDE7F6,stroke:#5E35B1,color:#311B92,stroke-width:2px
+    classDef terminal fill:#ECEFF1,stroke:#546E7A,color:#263238,stroke-width:2px
+
+    class D1,D2,D3,D4,D5,D6 docNode
+    class W1,W2,W3,W4 webNode
+    class Y1,Y2,Y3 ytNode
+    class IDX,PS storage
+    class RET terminal
+
+    style DOC fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,color:#0D47A1
+    style WEB fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+    style YT fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100
 ```
 
 ### 1. Documents: structure-aware splitting and parent-child chunking
@@ -189,18 +206,28 @@ flowchart TB
     MQ --> Q3[Query 3]
 
     subgraph HYB["Hybrid retrieval, run for each of the 3 queries"]
-        direction LR
         BM["BM25<br/>keyword match"]
         SEM["Semantic search<br/>embedding similarity"]
     end
 
-    Q1 --> HYB
-    Q2 --> HYB
-    Q3 --> HYB
-
-    HYB --> POOL["Merged candidate pool"]
+    Q1 & Q2 & Q3 --> BM & SEM
+    BM & SEM --> POOL["Merged candidate pool"]
     POOL --> CE["Cross-Encoder reranker<br/>scores each query-chunk pair"]
     CE --> OUT(["Ranked chunks, most relevant first"])
+
+    classDef terminal fill:#ECEFF1,stroke:#546E7A,color:#263238,stroke-width:2px
+    classDef llm fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px
+    classDef query fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1,stroke-width:2px
+    classDef retrieval fill:#E8F5E9,stroke:#43A047,color:#1B5E20,stroke-width:2px
+    classDef rerank fill:#FCE4EC,stroke:#D81B60,color:#880E4F,stroke-width:2px
+
+    class Q,OUT terminal
+    class MQ llm
+    class Q1,Q2,Q3 query
+    class BM,SEM,POOL retrieval
+    class CE rerank
+
+    style HYB fill:#F1F8E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
 ```
 
 ### Stage 1: Multi-Query
@@ -245,6 +272,20 @@ flowchart TD
     HIST[("Past Conversation<br/>SQLite")] -.-> CQ
     HIST -.-> AKB
     HIST -.-> ALLM
+
+    classDef terminal fill:#ECEFF1,stroke:#546E7A,color:#263238,stroke-width:2px
+    classDef llm fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px
+    classDef retrieval fill:#E8F5E9,stroke:#43A047,color:#1B5E20,stroke-width:2px
+    classDef decision fill:#FCE4EC,stroke:#D81B60,color:#880E4F,stroke-width:2px
+    classDef answer fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1,stroke-width:2px
+    classDef storage fill:#EDE7F6,stroke:#5E35B1,color:#311B92,stroke-width:2px
+
+    class START,FIN terminal
+    class CQ llm
+    class RET retrieval
+    class J decision
+    class AKB,ALLM answer
+    class HIST storage
 ```
 
 ### Nodes
@@ -301,6 +342,18 @@ flowchart LR
     E --> F[Run LangGraph workflow with this thread's history]
     F --> G[Write user message and answer to SQLite under the thread id]
     G --> E
+
+    classDef terminal fill:#ECEFF1,stroke:#546E7A,color:#263238,stroke-width:2px
+    classDef decision fill:#FCE4EC,stroke:#D81B60,color:#880E4F,stroke-width:2px
+    classDef step fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1,stroke-width:2px
+    classDef graph fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px
+    classDef storage fill:#EDE7F6,stroke:#5E35B1,color:#311B92,stroke-width:2px
+
+    class A terminal
+    class B decision
+    class C,E step
+    class D,G storage
+    class F graph
 ```
 
 ### Database
