@@ -7,19 +7,19 @@ A multi-purpose Retrieval-Augmented Generation (RAG) system that lets you chat w
 ## Table of contents
 
 - [Highlights](#highlights)
-- [Repository structure](#repository-structure)
-- [How a single query flows through the system](#how-a-single-query-flows-through-the-system)
-- [Ingestion and chunking](#ingestion-and-chunking)
-- [Retrieval layer (LangChain)](#retrieval-layer-langchain)
-- [Workflow orchestration (LangGraph)](#workflow-orchestration-langgraph)
-- [Persistence, threads and the database](#persistence-threads-and-the-database)
+- [Repository Structure](#repository-structure)
+- [How a Single Query Flows Through the System](#how-a-single-query-flows-through-the-system)
+- [Ingestion and Chunking](#ingestion-and-chunking)
+- [Retrieval Layer (LangChain)](#retrieval-layer-langchain)
+- [Workflow Orchestration (LangGraph)](#workflow-orchestration-langgraph)
+- [Persistence, Threads and the Database](#persistence-threads-and-the-database)
 - [Citations](#citations)
-- [LLM call budget](#llm-call-budget)
-- [Design decisions](#design-decisions)
+- [LLM Call Budget](#llm-call-budget)
+- [Design Decisions](#design-decisions)
 - [Limitations](#limitations)
-- [Future work](#future-work)
-- [Tech stack](#tech-stack)
-- [Getting started](#getting-started)
+- [Future Work](#future-work)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
 
 ---
 
@@ -46,7 +46,7 @@ Multipurpose-RAG/
 ```
 ---
 
-## How a single query flows through the system
+## How a Single Query Flows Through the System
 
 The diagram below follows one user question from the UI to the final answer. Ingestion happens before this point, when the user adds a Document, Web Link or YouTube Video (see [Ingestion and Chunking](#ingestion-and-chunking)).
 
