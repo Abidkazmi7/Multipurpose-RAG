@@ -346,14 +346,14 @@ flowchart LR
     classDef terminal fill:#ECEFF1,stroke:#546E7A,color:#263238,stroke-width:2px
     classDef decision fill:#FCE4EC,stroke:#D81B60,color:#880E4F,stroke-width:2px
     classDef step fill:#E3F2FD,stroke:#1E88E5,color:#0D47A1,stroke-width:2px
-    classDef graph fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px
+    classDef workflow fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px
     classDef storage fill:#EDE7F6,stroke:#5E35B1,color:#311B92,stroke-width:2px
 
     class A terminal
     class B decision
     class C,E step
     class D,G storage
-    class F graph
+    class F workflow
 ```
 
 ### Database
